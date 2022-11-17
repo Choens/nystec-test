@@ -1,0 +1,30 @@
+# NYSTEC Technical Exam
+
+An example report seeking to fulfill the requirements from the NYSTEC technical
+exam sent to me on 11/16/2022. The data, `Research_Question_1.xls` is not
+included in this repo. To run the report, drop the data source file into the
+`data` folder.
+
+# Run
+
+There are only two steps to run this report.
+
+1. Export the data from Excel and place into DuckDB database with `make data/claims.duckdb`
+2. Run the report, which will create a DOCX file with `make report.docx`
+
+Or, if you don't have GNU Make installed, run the `data/claims.R` file and then
+render the report.qmd file.
+
+Dependencies of this report include:
+
+- Quarto
+    - TinyTeX (sic)
+- R (and the following packages)
+    - DBI
+    - duckdb
+    - lubridate
+    - readxl
+    - tidyverse
+- GNU Make (optional)
+
+This report was run on a Fedora 37 system

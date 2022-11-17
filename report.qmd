@@ -1,0 +1,161 @@
+---
+title: "Research Questions"
+author: "Andy Choens"
+date: "`r lubridate::today()`"
+format: docx
+---
+
+```{r include=FALSE}
+library(DBI)
+library(tidyverse)
+source("R/connect_to_duck.R")
+con <- connect_to_duck()
+```
+
+
+Thank you for the opportunity to apply for a data analyst position with NYSTEC. I have used the document provided for this test as a starting point for this document. A theme repeated throughout this document is that I would prefer to refine requirements/understanding with stakeholders before attempting to understand this kind of a vague report. However, some reports must be completed quickly. In that case, the best approach is to interpret the requirements broadly and provide as much data/insght as possible in the time given to maximize the chances of successfully completing the report.
+
+I implemented this solution using Quarto, some simple R, and SQL. The tables in this report are define by the in-line SQL and are formatted by Quarto/pandoc. This is a high quality open source method for producing reproducible reports, dashboards, etc.
+
+# Research Question 1
+
+The question, as defined by the test:
+
+> For payment period Jan 2016 through March 2016, identify the institutional claims by claim type (claim_type_cd) and Category of Service (COS_CD) with the highest dollar paid amounts. Include the total number of claims and distinct number of members.  
+> 
+> Note: Institutional claims are identified using the CLAIM_CLASS_CD. Include the Claim Type Cd and COS_CD descriptions.
+
+## Discussion
+
+The use case for this question was not specified and the requirements are somewhat vague.
+
+- What are the:
+  - Assumptions:
+      - Claims include a number of dates including service date, payment date, admit date, and discharge date. Based on the language "for payment period", this analysis will use the payment date to filter the claims to claims paid for between Jan 2016 and March 2016.
+       - The report requirements do not specify if the desired analysis is the highest total spend or the highest average spend per claim. However, the report does request the number of claims and members, thus the average can be derived if the total spend is included.
+       - The report requirements are not clear if the report should stratify costs by both claim type AND category of service, or both separately. To avoid any possible confusion, this report includes all possible interpretations of that requirement. Future reports will be shorter as requirements are better understood.
+       - Although the report identifies `CLAIM_TYPE_CD` and `COS_CD` as columns to stratify by, this report uses `CLAIM_TYPE_DESC` and `COS_DESC`, respectively, as they provide a more human friendly result. 
+  - Definitions:
+      - The most important definition in this report is "highest dollar paid amounts". This could be interpreted as total paid or highest average paid, or even the highest individual claim.
+  - Questions: 
+- What is the Expected Output: A table showing the claims, grouped by claim type and category of service in descending order of value. Because report requirements are vague, more than one answer will be provided. As requirements are refined, future reports will be shorter.
+- What are our Filters/Criteria:
+    - We are only interested in claims paid for in the first quarter of 2016.
+- Analysis Approach: The report requirements are vague. My preference would be to first refine the report requirements with key stakeholders. When that is not feasible, the next best response is to identify a reasonable set of interpretations and provide all of them in the first report, with the expectation that future reports will refine the requirements and be more specific. This report could also be fulfilled in an Excel file, giving the recipient the flexibility to sort the data in several ways.
+
+## SQL
+
+This report provides three interpretations of the report requirements. Future reports will be provided as requirements are clarified.
+
+### Results Grouped By Claim Type
+
+The code/table below calculate the total paid and average paid per claim for each claim type. Results are sorted by descending total paid, although this could just as easily be sorted by the descending average paid per claim.
+
+```{sql connection = con}
+-- DuckDB does not allow the user to easily define variables.
+-- Otherwise, I would prefer to define filter variables such as the date range
+-- at the TOP of the query, rather than in-line as done here.
+select
+    CLAIM_TYPE_DESC as 'Claim Type',
+    sum(PAID_AMOUNT) as 'Total Paid',
+    count(distinct CLAIM_TRANS_ID) as 'Number of Claims',
+    round(avg(PAID_AMOUNT),2) as 'Average Paid Per Claim',
+    count(distinct MBR_ID) as'Number of Unique Members'
+from CLAIM_TRANS
+where PMT_DT between '2016-01-01' and '2016-03-31'
+group by CLAIM_TYPE_DESC
+order by sum(PAID_AMOUNT) desc
+```
+
+### Grouped By Category of Service
+
+The code/table below calculate the total paid and average paid per claim for each category of service. Results are sorted by descending total paid, although this could just as easily be sorted by the descending average paid per claim.
+
+```{sql connection = con}
+select
+    COS_DESC as 'Category of Service',
+    sum(PAID_AMOUNT) as 'Total Paid',
+    count(distinct CLAIM_TRANS_ID) as 'Number of Claims',
+    round(avg(PAID_AMOUNT),2) as 'Average Paid Per Claim',
+    count(distinct MBR_ID) as'Number of Unique Members'
+from CLAIM_TRANS
+where PMT_DT between '2016-01-01' and '2016-03-31'
+group by COS_DESC
+order by sum(PAID_AMOUNT) desc
+```
+
+## Grouped by Claim Type and Category of Service
+
+The code/table below calculate the total paid and average paid per claim for each claim type and category of service. Results are sorted by descending total paid, although this could just as easily be sorted by the descending average paid per claim.
+
+```{sql connection = con}
+select
+    CLAIM_TYPE_DESC as 'Claim Type',
+    COS_DESC as 'Category of Service',
+    sum(PAID_AMOUNT) as 'Total Paid',
+    count(distinct CLAIM_TRANS_ID) as 'Number of Claims',
+    round(avg(PAID_AMOUNT),2) as 'Average Paid Per Claim',
+    count(distinct MBR_ID) as'Number of Unique Members'
+from CLAIM_TRANS
+where PMT_DT between '2016-01-01' and '2016-03-31'
+group by CLAIM_TYPE_DESC, COS_DESC
+order by sum(PAID_AMOUNT) desc
+```
+
+# Research Question 2:
+
+The question, as defined by the test:
+
+> For Research Question 2, you are being asked to determine what the question is based on the SQL below. Please fill in the Question and all the bullets below. This is a ‘reverse engineering’ exercise. 
+
+## SQL
+
+This was provided by the test. I was not able to run this query with the information I have in the provided data set.
+
+I don't like the way this query is structured. The join clause includes filtering criteria not needed for the actual join. It would be easy to skim this query for the where clause and not notice the filter criteria defined in the join clause. In a small query like this, it is a minor detail. In a longer/more complex query it can easily lead to misunderstandings and misuse of a previously written query.
+
+```sql
+SELECT
+    CLAIM_TABLE.MBR_ID,
+    CLAIM_TABLE.BILL_NPI,
+    PROV_TABLE.NPI_NAME,
+    COUNT (DISTINCT CLAIM_TABLE.ADMIT_DATE)
+FROM
+   CLAIM_TABLE
+JOIN
+    PROV_TABLE
+    ON CLAIM_TABLE.BILL_NPI = PROV_TABLE.NPI
+WHERE
+       CLAIM_TABLE.ADMIT_DATE BETWEEN TO_DATE('01-JUL-2015','DD-MON-YYYY') AND TO_DATE('30-JUN-2016','DD-MON-YYYY')
+    AND
+       CLAIM_TABLE.CLAIM_TYPE_DESC = 'INPATIENT'
+    AND 
+       CLAIM_TABLE.MBR_AGE_ON_DOS BETWEEN 18 AND 64
+GROUP BY CLAIM_TABLE.MBR_ID, CLAIM_TABLE.BILL_NPI, PROV_TABLE.NPI_NAME
+HAVING
+  COUNT(DISTINCT CLAIM_TABLE.ADMIT_DATE)  > 3;
+```
+
+## Discussion
+
+- What are the:
+    - Questions: The question here appears to be a list of patients with more than three inpatient admissions at the same hospital between July 2015 and June 2016.
+    - Assumptions: 
+      - For inpatient records, BILL_NPI is a hospital. For example `1548374549` is New York Presbyterian in Brooklyn.
+    - Definitions:
+        - This report does not use the standard New York State fiscal year as I remember it. Without understanding the use case of the report, I cannot comment further on that.
+        - This report is based on the begin date of the inpatient stay, not the discharge date, which is not how OQPS counts inpatient stays. But, there may be a good reason for this and/or a standard I am not familiar with.
+- What is the Expected Output:
+    - The output of this query will be a list of patients, hospitals and the count of inpatient stays the member has had at that hospital in the given time frame.
+- What are our Filters/Criteria:
+    - Inpatient claims only.
+    - Inpatient episode must have started between the beginning of July, 2015 and the end of June, 2016. 
+    - Only includes adults, 18 to 64. This excludes most Medicare members, but not all.
+    - Only includes patients with more than three inpatient stays at the same hospital.
+- Analysis Approach:
+    - I would first want to better understand the use case of this report. There are several things which stick out to me, but I don't want to judge them without first knowing why this report is wanted and how it would be used.
+
+```{r incude=FALSE}
+dbDisconnect(con, shutdown=TRUE)
+```
+

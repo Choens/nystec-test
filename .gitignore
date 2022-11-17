@@ -1,0 +1,4 @@
+*.xls*
+*.duckdb
+.Rhistory
+*.Rproj*
