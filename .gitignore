@@ -2,3 +2,4 @@
 *.duckdb
 .Rhistory
 *.Rproj*
+.vscode
