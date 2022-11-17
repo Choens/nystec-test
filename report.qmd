@@ -13,7 +13,7 @@ con <- connect_to_duck()
 ```
 
 
-Thank you for the opportunity to apply for a data analyst position with NYSTEC. I have used the document provided for this test as a starting point for this document. A theme repeated throughout this document is that I would prefer to refine requirements/understanding with stakeholders before attempting to understand this kind of a vague report. However, some reports must be completed quickly. In that case, the best approach is to interpret the requirements broadly and provide as much data/insght as possible in the time given to maximize the chances of successfully completing the report.
+Thank you for the opportunity to apply for a data analyst position with NYSTEC. I have used the document provided for this test as a starting point for this document. A theme repeated throughout this document is that I would prefer to refine requirements/understanding with stakeholders before attempting to understand this kind of a vague report. However, some reports must be completed quickly. In that case, the best approach is to interpret the requirements broadly and provide as much data/insight as possible in the time given to maximize the chances of successfully completing the report.
 
 I implemented this solution using Quarto, some simple R, and SQL. The tables in this report are define by the in-line SQL and are formatted by Quarto/pandoc. This is a high quality open source method for producing reproducible reports, dashboards, etc.
 
@@ -38,6 +38,8 @@ The use case for this question was not specified and the requirements are somewh
   - Definitions:
       - The most important definition in this report is "highest dollar paid amounts". This could be interpreted as total paid or highest average paid, or even the highest individual claim.
   - Questions: 
+      - I would like to better understand why this time frame was chosen.
+      - I would like to better understand exactly what they mean by "highest dollar paid amounts".
 - What is the Expected Output: A table showing the claims, grouped by claim type and category of service in descending order of value. Because report requirements are vague, more than one answer will be provided. As requirements are refined, future reports will be shorter.
 - What are our Filters/Criteria:
     - We are only interested in claims paid for in the first quarter of 2016.
@@ -53,7 +55,7 @@ The code/table below calculate the total paid and average paid per claim for eac
 
 ```{sql connection = con}
 -- DuckDB does not allow the user to easily define variables.
--- Otherwise, I would prefer to define filter variables such as the date range
+-- I prefer to define filter variables such as the date range
 -- at the TOP of the query, rather than in-line as done here.
 select
     CLAIM_TYPE_DESC as 'Claim Type',
@@ -106,7 +108,7 @@ order by sum(PAID_AMOUNT) desc
 
 The question, as defined by the test:
 
-> For Research Question 2, you are being asked to determine what the question is based on the SQL below. Please fill in the Question and all the bullets below. This is a ‘reverse engineering’ exercise. 
+> For Research Question 2, you are being asked to determine what the question is based on the SQL below. Please fill in the Question and all the bullets below. This is a 'reverse engineering' exercise. 
 
 ## SQL
 
@@ -141,10 +143,10 @@ HAVING
 - What are the:
     - Questions: The question here appears to be a list of patients with more than three inpatient admissions at the same hospital between July 2015 and June 2016.
     - Assumptions: 
-      - For inpatient records, BILL_NPI is a hospital. For example `1548374549` is New York Presbyterian in Brooklyn.
+      - For inpatient records, `BILL_NPI` is a hospital. For example NPI `1548374549` is New York Presbyterian in Brooklyn.
     - Definitions:
-        - This report does not use the standard New York State fiscal year as I remember it. Without understanding the use case of the report, I cannot comment further on that.
-        - This report is based on the begin date of the inpatient stay, not the discharge date, which is not how OQPS counts inpatient stays. But, there may be a good reason for this and/or a standard I am not familiar with.
+        - This report does not use the standard New York State fiscal year as I remember it. Without understanding the use case of the report, I cannot comment further, but I would want to better understand why that date range was chosen. And the reason may be very good.
+        - This report is based on the begin date of the inpatient stay, not the discharge date, which is not how DOH OQPS counts episodes of inpatient care. But, there may be a good reason for this and/or a standard I am not familiar with.
 - What is the Expected Output:
     - The output of this query will be a list of patients, hospitals and the count of inpatient stays the member has had at that hospital in the given time frame.
 - What are our Filters/Criteria:
@@ -155,7 +157,7 @@ HAVING
 - Analysis Approach:
     - I would first want to better understand the use case of this report. There are several things which stick out to me, but I don't want to judge them without first knowing why this report is wanted and how it would be used.
 
-```{r incude=FALSE}
+```{r include=FALSE}
 dbDisconnect(con, shutdown=TRUE)
 ```
 
